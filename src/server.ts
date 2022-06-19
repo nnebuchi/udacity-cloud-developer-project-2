@@ -3,10 +3,7 @@ import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 import { IndexRouter } from './controllers/v0/index.router';
 
-
 var cors = require('cors');
-
-
 
 (async () => {
 
@@ -18,19 +15,22 @@ var cors = require('cors');
   
   // Use the body parser middleware for post requests
   app.use(bodyParser.json());
+  
   // Cross Origin Request access
   app.use(cors());
   // @TODO1 IMPLEMENT A RESTFUL ENDPOINT
-
   app.use('/api/v0/', IndexRouter);
 
   app.use(express.static('public'));
   // Root URI call
   app.get( "/", async ( req, res ) => {
-    console.log(req.baseUrl);
+    res.send(`Welcome <br/> Checkout How this workd by clicking the to links below. <br/> <a href="https://stormcelltech.com/assets/images/background/stormcell-hero-bg.png" target="_blank">orginal Image</a> <br /> <a href=http://${req.get('host')}/api/v0/photos/filteredimage?image_url=https://stormcelltech.com/assets/images/background/stormcell-hero-bg.png target="_blank">Filtered Image</a>`)
+    
     res.end();
   } );
+
   // GET /filteredimage?image_url={{URL}}
+    // Ans: this is found in /api/v0/photos/filteredimage
 
   // endpoint to filter an image from a public url.
   // IT SHOULD
