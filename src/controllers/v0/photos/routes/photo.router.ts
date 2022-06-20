@@ -6,78 +6,80 @@ import path from "path";
 
 const router: Router = Router();
 
-const gallery = {
-    url:"https://www.publicdomainpictures.net/pictures/",
-    photos:[
-        {
-            id:1,
-            path:"430000/velka/art-nouveau-vintage-kunst-16416644360b8.jpg"
-        },
-        {
-            id:2,
-            path:"450000/velka/woman-in-red-hat.jpg"
-        }
-    ]
-}
+const gallery = [
+    {
+        id:1,
+        name:"Golden Boy",
+        path:"photos/avatar.png"
+    },
+    {
+        id:2,
+        name:"Art in Heaven",
+        path:"photos/profile-pic-.png"
+    }
+];
+
+
 // Get all photos in folder
 router.get('/', async (req: Request, res: Response) => {
-    let photos:string[] = [];
-    const photoPath = path.join(`${__dirname}../../../../../../public`, 'photos');
-    fs.readdir(photoPath, function (error, files) {
-        
-        if (error) {
-             console.log('Failed to scan folder: ' + error);
-             return;
-        } 
-        photos = files;
-
-        res.status(201);
-        res.send({
-            status:"success",
-            images:photos,
-            url: `${req.get('host')}/photos`,
-            path: photoPath,
-            filterUrl:`${req.get('host')}/api/v0/photos/filteredimage` 
-        });
-        return;
-        //listing all files using forEach
-        // files.forEach(function (file) {
-        //     // Do whatever you want to do with the file
-        //     console.log(file); 
-        // });
+   
+    res.status(201);
+    res.json({
+        status:"success",
+        photos:gallery,
+        filterUrl:`${req.get('host')}/api/v0/photos/filteredimage?image_url=` 
     });
-    
-    // res.send(photos);
+    return;
+   
 });
-http://localhost:8082/api/v0/photos/filteredimage?photo=mobile_banner.jpg
-router.get('/filteredimage', async (req: Request, res: Response) => {
-    const image = req.query.photo
 
-    // const url = req.baseUrl
-    // const filteredImage = filterImageFromURL(imagePath)
-    // res.download(imagePath, function(err) {
-    //     if(err) {
-    //         console.log(err);
-    //     }
-    // })
-    const fileDir =  `${__dirname}../../../../../../public/photos/${image}`;
-    if (!fs.existsSync(fileDir)) {
-        res.status(404);
-        res.send('file not found');
-    }
-    try {
-        const filteredFile = await filterImageFromURL(fileDir);
-        res.sendFile(filteredFile)
-        const deletFile = await deleteLocalFiles([fileDir])
+
+router.get('/filteredimage', async (req: Request, res: Response) => {
+
+    const query = req.query;
+
+    if(!query.image_url){
+        res.status(404).send('not found');
         return;
+    }
+
+    try {
+        // filter image
+        const filteredFile = await filterImageFromURL(query.image_url);
+        // send file to client side
+        res.status(200).sendFile(filteredFile);
+        
+        const photoPath =  './src/util/tmp';
+        // scan folder where photos are temporarily saved
+        fs.readdir(photoPath, function (error, files) {
+        
+            if (error) {
+                 console.log('Failed to scan folder for file deletion: ' + error);
+                 return;
+            } 
+            // create an array of file paths from the scanned files
+            files.forEach(function (file, index) {
+
+                files[index] = `${photoPath}/${file}`
+                    
+            });
+            // delete files by passing an array of file paths
+            try{
+                deleteLocalFiles(files);
+                console.log('local files deleted');
+                return;
+            } catch(err){
+                console.log(`could not delete file: ${err}`);
+                return;
+            }
+        });
+        
     }catch(e){
         res.status(500);
         res.json({ error: 'Unable to get file' });
         return;
     }
-    // res.status(201);
-    // res.send(__dirname);
-    // res.send(photos);
+   
 });
 
 export const PhotoRouter: Router = router;
