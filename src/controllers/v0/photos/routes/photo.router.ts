@@ -47,7 +47,7 @@ router.get('/filteredimage', async (req: Request, res: Response) => {
         // filter image
         const filteredFile = await filterImageFromURL(query.image_url);
         // send file to client side
-        res.sendFile(filteredFile);
+        res.status(200).sendFile(filteredFile);
         
         const photoPath =  './src/util/tmp';
         // scan folder where photos are temporarily saved
